@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>台灣綠色色票混色遊戲</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --primary-green: #355C2A;
+            --forest-green: #24451F;
+            --light-plant-green: #E8EEE2;
+            --bg-base: #F5F5EF;
+            --bg-card: #F5F5EF;
+            --text-main: #273229;
+            --text-secondary: #697268;
+            --text-muted: #8A9189;
+            --border-color: #DDE2D8;
+            --swatch-card-border: #E1E5DE;
+            --shadow-level-1: 0 4px 16px rgba(38, 58, 34, 0.05);
+            --shadow-level-2: 0 8px 20px rgba(38, 58, 34, 0.10);
+            --shadow-specimen: 0 12px 36px rgba(38, 58, 34, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 40px 20px;
+            background-image: radial-gradient(rgba(53, 92, 42, 0.03) 1px, transparent 0);
+            background-size: 24px 24px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1100px;
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+            align-items: center;
+        }
+
+        header {
+            text-align: center;
+            padding: 16px 0 8px 0;
+        }
+
+        .header-title-main {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--primary-green);
+            line-height: 1.2;
+        }
+
+        .header-title-sub {
+            font-size: 18px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .header-desc {
+            font-size: 14px;
+            font-weight: 400;
+            color: var(--text-secondary);
+            margin-top: 12px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .section-counter {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .palette-card-container {
+            background: #FFFFFF;
+            border-radius: 20px;
+            padding: 28px;
+            box-shadow: var(--shadow-level-1);
+            border: 1px solid var(--border-color);
+            width: 100%;
+            max-width: 900px;
+        }
+
+        .palette-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 16px;
+        }
+
+        .color-item {
+            position: relative;
+            background: #FAFAF7;
+            border: 1px solid var(--swatch-card-border);
+            border-radius: 12px;
+            padding: 12px 8px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            height: 142px; 
+            width: 100%;
+            transition: transform 0.2s ease-out, box-shadow 0.2s ease-out, background-color 0.2s;
+        }
+
+        .color-item:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-level-2);
+            background: #FFFFFF;
+        }
+
+        .color-item:hover .color-circle {
+            transform: scale(1.08);
+        }
+
+        .color-item.selected {
+            border: 2px solid var(--primary-green);
+            background-color: var(--light-plant-green);
+        }
+
+        .color-circle {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 2px solid #FFFFFF;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.10);
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            flex-shrink: 0;
+        }
+
+        .color-text-box {
+            width: 100%;
+            height: 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .color-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-main);
+            line-height: 1.25;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            word-break: break-all;
+        }
+
+        .color-hex {
+            font-size: 10px;
+            font-weight: 400;
+            color: var(--text-muted);
+            letter-spacing: 0.3px;
+            font-family: monospace;
+            margin-top: 3px;
+        }
+
+        .check-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 20px;
+            height: 20px;
+            background-color: var(--primary-green);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #FFFFFF;
+            font-size: 11px;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .color-item.selected .check-badge {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* --------------------------------------------------
+           【已修正】寬度適中、好閱讀的懸停小知識 Tooltip 樣式
+           -------------------------------------------------- */
+        .color-item::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 105%;
+            left: 50%;
+            transform: translateX(-50%) translateY(4px);
+            background-color: #273229;
+            color: #F5F5EF;
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 1.5;
+            padding: 10px 14px;
+            border-radius: 8px;
+            width: 230px; /* 固定舒服的閱讀寬度，不再細長 */
+            white-space: normal; /* 允許正常自然換行 */
+            box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 20;
+            pointer-events: none;
+            text-align: left;
+        }
+
+        .color-item:hover::after {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .mixing-board-card {
+            background: #FAFAF7;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 24px 32px;
+            box-shadow: var(--shadow-level-1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 180px;
+            justify-content: center;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        .mixing-display-area {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 20px;
+            min-height: 64px;
+            width: 100%;
+        }
+
+        .mixing-placeholder {
+            font-size: 14px;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .mixing-item-preview {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .mixing-item-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #FFFFFF;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+        }
+
+        .mixing-item-name {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .mixing-plus {
+            font-size: 16px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .btn-mix {
+            width: 160px;
+            height: 48px;
+            background-color: var(--primary-green);
+            color: #FFFFFF;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease-out;
+            box-shadow: 0 4px 10px rgba(53,92,42,0.15);
+        }
+
+        .btn-mix:hover:not(:disabled) {
+            background-color: var(--forest-green);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 14px rgba(36,69,31,0.22);
+        }
+
+        .btn-mix:disabled {
+            background-color: var(--border-color);
+            color: var(--text-muted);
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .result-section {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+            animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            width: 100%;
+        }
+
+        .specimen-card {
+            width: 440px;
+            aspect-ratio: 4 / 5;
+            background-color: #F5F5EF;
+            border: 1px solid #E2E6DC;
+            border-radius: 8px;
+            padding: 48px 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            box-shadow: var(--shadow-specimen);
+            overflow: hidden;
+        }
+
+        .specimen-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                radial-gradient(circle at 10% 15%, rgba(53,92,42,0.02) 0%, transparent 40%),
+                radial-gradient(circle at 90% 85%, rgba(53,92,42,0.03) 0%, transparent 40%);
+            pointer-events: none;
+        }
+
+        .specimen-header {
+            text-align: center;
+            z-index: 1;
+        }
+
+        .specimen-tagline {
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 3px;
+            color: var(--primary-green);
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .specimen-main-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #355C2A;
+            margin-bottom: 6px;
+            letter-spacing: 1px;
+        }
+
+        .specimen-sub-title {
+            font-size: 15px;
+            font-weight: 400;
+            color: var(--text-secondary);
+        }
+
+        .specimen-circle-container {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 1;
+            margin: 10px 0;
+        }
+
+        .specimen-circle {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            border: 3px solid #F5F5EF;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            transition: background-color 0.3s ease;
+        }
+
+        .specimen-color-info {
+            text-align: center;
+            z-index: 1;
+            margin-top: 4px;
+        }
+
+        .specimen-hex {
+            font-size: 18px;
+            font-weight: 600;
+            color: #273229;
+            letter-spacing: 1px;
+            font-family: monospace;
+            margin-bottom: 6px;
+        }
+
+        .specimen-desc-badge {
+            display: inline-block;
+            font-size: 12px;
+            color: #697268;
+            background: rgba(232, 238, 226, 0.6);
+            padding: 3px 12px;
+            border-radius: 12px;
+            border: 1px solid #DDE2D8;
+        }
+
+        .specimen-recipe-section {
+            width: 100%;
+            border-top: 1px solid #E2E6DC;
+            padding-top: 14px;
+            z-index: 1;
+        }
+
+        .specimen-recipe-title {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .specimen-recipe-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .specimen-recipe-item {
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+            color: var(--text-main);
+        }
+
+        .recipe-dot-small {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 1px solid rgba(0,0,0,0.1);
+            margin-right: 8px;
+            flex-shrink: 0;
+        }
+
+        .recipe-name {
+            font-weight: 400;
+        }
+
+        .recipe-hex-code {
+            margin-left: auto;
+            font-family: monospace;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .result-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 8px;
+        }
+
+        .btn-action-primary {
+            background-color: var(--primary-green);
+            color: #FFFFFF;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+            box-shadow: 0 4px 10px rgba(53,92,42,0.15);
+        }
+
+        .btn-action-primary:hover {
+            background-color: var(--forest-green);
+            transform: translateY(-2px);
+        }
+
+        .btn-action-secondary {
+            background-color: #FFFFFF;
+            color: var(--primary-green);
+            border: 1px solid var(--primary-green);
+            border-radius: 12px;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-action-secondary:hover {
+            background-color: var(--light-plant-green);
+            transform: translateY(-2px);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .mixing-animation .mixing-item-preview {
+            animation: mergeAnim 0.8s ease-in-out forwards;
+        }
+
+        @keyframes mergeAnim {
+            0% { transform: scale(1) translateX(0); }
+            50% { transform: scale(0.7) translateX(0); opacity: 0.6; }
+            100% { transform: scale(0.4) translateY(-10px); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div class="header-title-main">台灣綠色</div>
+        <div class="header-title-sub">色票混色遊戲</div>
+        <div class="header-desc">選擇屬於你的政治覺醒綠色，混合出一種專屬於你的新綠。</div>
+    </header>
+
+    <section style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+        <div class="section-header">
+            <div class="section-title">01 選擇色票</div>
+            <div class="section-counter" id="selectedCounterText">已選 0 / 5</div>
+        </div>
+        <div class="palette-card-container">
+            <div class="palette-grid" id="paletteGrid"></div>
+        </div>
+    </section>
+
+    <section style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+        <div class="section-header">
+            <div class="section-title">02 你的混色</div>
+        </div>
+        <div class="mixing-board-card" id="mixingBoardCard">
+            <div class="mixing-display-area" id="mixingDisplayArea">
+                <span class="mixing-placeholder">請從上方色票區點選 1 至 5 種綠色進行混色</span>
+            </div>
+            <button class="btn-mix" id="mixButton" onclick="startMixing()" disabled>混合看看</button>
+        </div>
+    </section>
+
+    <section class="result-section" id="resultSection">
+        <div class="section-header" style="max-width: 440px;">
+            <div class="section-title">03 新色誕生</div>
+        </div>
+        
+        <div class="specimen-card" id="specimenCardElement">
+            <div class="specimen-header">
+                <div class="specimen-tagline">TAIWAN GREEN</div>
+                <div class="specimen-main-title">✦ 新色誕生 ✦</div>
+                <input type="text" id="resultNameInput" class="specimen-sub-title" value="我的專屬新綠" title="點擊可編輯新色名稱" style="border: 1px dashed transparent; background: transparent; text-align: center; outline: none; font-family: inherit; width: 100%; border-radius: 4px; transition: border-color 0.2s;" onmouseover="this.style.borderColor='#DDE2D8'" onmouseout="this.style.borderColor='transparent'">
+            </div>
+
+            <div class="specimen-circle-container">
+                <div class="specimen-circle" id="specimenCirclePreview"></div>
+            </div>
+
+            <div class="specimen-color-info">
+                <div class="specimen-hex" id="specimenHexText">#649241</div>
+                <div class="specimen-desc-badge" id="specimenDescText">帶點橄欖調的古董植生綠</div>
+            </div>
+
+            <div class="specimen-recipe-section">
+                <div class="specimen-recipe-title" id="recipeTitle">混合成分（3種）</div>
+                <ul class="specimen-recipe-list" id="recipeListContainer"></ul>
+            </div>
+        </div>
+
+        <div class="result-actions" style="width: 100%; max-width: 440px;">
+            <button class="btn-action-primary" onclick="resetGame()">再玩一次</button>
+            <button class="btn-action-secondary" onclick="copyHexCode()">複製色碼</button>
+            <button class="btn-action-secondary" onclick="downloadSpecimenCard()">下載色票圖片</button>
+        </div>
+    </section>
+</div>
+
+<script>
+    // 每一則小知識皆精準對應歷史時間點
+    const colorsData = [
+        { name: "青鳥", hex: "#91B354", tooltip: "【2024年5月】台灣立法院審議國會職權修法時，群眾在台北市「青島東路」外集會抗議。示威者為避免在社群平台發文時遭到演算法干擾或阻擋，改用字音、字形相似的「青鳥」作為代稱。" },
+        { name: "塔綠班", hex: "#77AF4E", tooltip: "【2021年8月】在台灣網路論壇PTT出現的流行語，取自伊斯蘭原教旨主義組織塔利班的諧音，主要用於泛綠陣營以外的其他反對陣營，用以惡意戲稱泛綠陣營民主進步黨及其支持者" },
+        { name: "817", hex: "#3D8C3D", tooltip: "【2020年大選】中華民國第15任總統大選中，蔡英文獲得的 817 萬歷史最高得票數記錄。" },
+        { name: "英粉<br>1450", hex: "#929B4B", tooltip: "【2019年爭議】源自農委會網路宣傳預算遭質疑，隨後演變為支持者自嘲的代稱。" },
+        { name: "太陽花學運<br>覺醒青年", hex: "#769140", tooltip: "【2014年3月】太陽花學運，推動臺灣當代公民意識與社會覺醒的重要歷史契機。" },
+        { name: "野草莓", hex: "#4F8658", tooltip: "【2008年11月】野草莓學運，起因於抗議中國海協會長陳雲林訪台期間的集會遊行爭議。" },
+        { name: "綠吱 (吱吱)", hex: "#5D8E3C", tooltip: "【2000年代】早年 PTT 等網路論壇上對特定政治傾向支持者的網路稱呼。另根據「鄉民大百科」則認為2006年大規模出現在各大論壇上。" },
+        { name: "2004228<br>牽手護台灣", hex: "#418434", tooltip: "【2004年2月28日】發起的百萬人牽手護台灣運動，表達反對中國部署飛彈的立場。" },
+        { name: "彭友會<br>台獨份子", hex: "#27692C", tooltip: "【1996年】台灣第一次總統直接民選，彭明敏代表民主進步黨參選第9任總統，全台各地成立「彭明敏之友會」與後援組織。對手陣營攻擊與辯論其為台獨份子。" },
+        { name: "扁迷", hex: "#696E34", tooltip: "【2000–2008年】陳水扁執政時期及支持者（阿扁們）的歷史政治記憶。" },
+        { name: "野百合世代", hex: "#3F6929", tooltip: "【1990年3月】中正紀念堂前的野百合學運，促成了萬年國會全面改選與民主轉型。" },
+        { name: "民主香火", hex: "#285028", tooltip: "【1979年前後】美麗島事件發生前後至1980年底增額立委選舉，在戒嚴黑暗期苦心傳承的民主燈火。" },
+        { name: "黨外人士<br>野心政客｜滋事份子", hex: "#164221", tooltip: "【1986年前】1987年解嚴、黨禁解除前，以及1986年民主進步黨創黨前，威權體制對黨外反對運動參與者的官方定調。" }
+    ];
+
+    let selectedColors = [];
+    let finalCalculatedHex = "#649241";
+
+    function initPalette() {
+        const grid = document.getElementById('paletteGrid');
+        colorsData.forEach((c, index) => {
+            const item = document.createElement('div');
+            item.className = 'color-item';
+            item.dataset.index = index;
+            item.setAttribute('data-tooltip', c.tooltip);
+
+            item.innerHTML = `
+                <div class="check-badge">✓</div>
+                <div class="color-circle" style="background-color: ${c.hex};"></div>
+                <div class="color-text-box">
+                    <div class="color-label">${c.name}</div>
+                    <div class="color-hex">${c.hex}</div>
+                </div>
+            `;
+
+            item.onclick = () => toggleSelectColor(index, item);
+            grid.appendChild(item);
+        });
+    }
+
+    function toggleSelectColor(index, element) {
+        const colorObj = colorsData[index];
+        const existingIdx = selectedColors.findIndex(c => c.hex === colorObj.hex && c.name === colorObj.name);
+
+        if (existingIdx > -1) {
+            selectedColors.splice(existingIdx, 1);
+            element.classList.remove('selected');
+        } else {
+            if (selectedColors.length >= 5) {
+                alert('最多只能選擇 5 種色票進行混色！');
+                return;
+            }
+            selectedColors.push(colorObj);
+            element.classList.add('selected');
+        }
+
+        updateUIState();
+    }
+
+    function updateUIState() {
+        const count = selectedColors.length;
+        document.getElementById('selectedCounterText').innerText = `已選 ${count} / 5`;
+
+        const displayArea = document.getElementById('mixingDisplayArea');
+        const mixBtn = document.getElementById('mixButton');
+
+        if (count === 0) {
+            displayArea.innerHTML = `<span class="mixing-placeholder">請從上方色票區點選 1 至 5 種綠色進行混色</span>`;
+            mixBtn.disabled = true;
+        } else {
+            mixBtn.disabled = false;
+            let htmlContent = '';
+            selectedColors.forEach((c, idx) => {
+                if (idx > 0) {
+                    htmlContent += `<span class="mixing-plus">＋</span>`;
+                }
+                htmlContent += `
+                    <div class="mixing-item-preview">
+                        <div class="mixing-item-circle" style="background-color: ${c.hex};"></div>
+                        <span class="mixing-item-name">${c.name}</span>
+                    </div>
+                `;
+            });
+            displayArea.innerHTML = htmlContent;
+        }
+    }
+
+    function startMixing() {
+        if (selectedColors.length === 0) return;
+
+        const boardCard = document.getElementById('mixingBoardCard');
+        boardCard.classList.add('mixing-animation');
+        document.getElementById('mixButton').disabled = true;
+
+        let r = 0, g = 0, b = 0;
+        selectedColors.forEach(c => {
+            let num = parseInt(c.hex.replace('#', ''), 16);
+            r += (num >> 16) & 255;
+            g += (num >> 8) & 255;
+            b += num & 255;
+        });
+        r = Math.round(r / selectedColors.length);
+        g = Math.round(g / selectedColors.length);
+        b = Math.round(b / selectedColors.length);
+
+        finalCalculatedHex = "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
+
+        setTimeout(() => {
+            boardCard.classList.remove('mixing-animation');
+            showResultCard(finalCalculatedHex);
+        }, 950);
+    }
+
+    function generateUniqueDescription(hex, selectedItems) {
+        const combinedNames = selectedItems.map(item => item.name).sort().join('-');
+        let hash = 0;
+        for (let i = 0; i < combinedNames.length; i++) {
+            hash = ((hash << 5) - hash) + combinedNames.charCodeAt(i);
+            hash |= 0;
+        }
+        hash = Math.abs(hash);
+
+        const prefixes = [
+            "微風吹拂的", "晨霧籠罩的", "雨後初晴的", "記憶留存的", "時光交織的", 
+            "靜謐山徑的", "島嶼島脈的", "風土凝結的", "草木蔓發的", "歲月沉澱的",
+            "微光映照的", "向晚斜陽的", "初春萌芽的", "秋林落照的", "百年迴響的"
+        ];
+        const cores = [
+            "古董植生綠", "森林苔原綠", "春日嫩芽綠", "深邃灌木綠", "古城牆垣綠",
+            "晨露蕨葉綠", "山居野徑綠", "尋光藤蔓綠", "墨影松柏綠", "尋徑翠影綠",
+            "大地脈動綠", "逆光茶園綠", "老樟樹蔭綠", "潮間林徑綠", "浮光草葉綠"
+        ];
+
+        let pIndex = hash % prefixes.length;
+        let cIndex = (hash + parseInt(hex.replace('#',''), 16)) % cores.length;
+
+        return prefixes[pIndex] + cores[cIndex];
+    }
+
+    function showResultCard(hex) {
+        const resultSection = document.getElementById('resultSection');
+        resultSection.style.display = 'flex';
+
+        document.getElementById('specimenCirclePreview').style.backgroundColor = hex;
+        document.getElementById('specimenHexText').innerText = hex;
+        
+        document.getElementById('specimenDescText').innerText = generateUniqueDescription(hex, selectedColors);
+
+        document.getElementById('recipeTitle').innerText = `混合成分（${selectedColors.length}種）`;
+        const recipeList = document.getElementById('recipeListContainer');
+        recipeList.innerHTML = selectedColors.map(c => `
+            <li class="specimen-recipe-item">
+                <span class="recipe-dot-small" style="background-color: ${c.hex};"></span>
+                <span class="recipe-name">${c.name}</span>
+                <span class="recipe-hex-code">${c.hex}</span>
+            </li>
+        `).join('');
+
+        resultSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function copyHexCode() {
+        navigator.clipboard.writeText(finalCalculatedHex).then(() => {
+            alert(`已成功複製新色碼 ${finalCalculatedHex}！`);
+        });
+    }
+
+    function downloadSpecimenCard() {
+        const cardElement = document.getElementById('specimenCardElement');
+        html2canvas(cardElement, { scale: 2, backgroundColor: '#F5F5EF' }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = `Taiwan-Green-Specimen-${finalCalculatedHex}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        });
+    }
+
+    function resetGame() {
+        selectedColors = [];
+        document.querySelectorAll('.color-item').forEach(el => el.classList.remove('selected'));
+        document.getElementById('resultSection').style.display = 'none';
+        updateUIState();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    initPalette();
+</script>
+
+</body>
+</html>
